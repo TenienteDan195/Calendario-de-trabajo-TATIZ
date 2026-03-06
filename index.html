@@ -3,60 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cronograma Casa Áurea</title>
+    <title>Cronograma Casa Áurea - Tatiz Tsunede</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Optimización de la cuadrícula para móviles */
-        .calendar-grid { 
-            display: grid; 
-            grid-template-columns: repeat(7, 1fr); 
-            gap: 2px;
-        }
-        .day-card { 
-            min-height: 70px; /* Altura más baja para móviles */
-            border: 1px solid #f1f5f9; 
-            position: relative; 
-            display: flex;
-            flex-direction: column;
-            background: white;
-        }
-        @media (min-width: 768px) {
-            .day-card { min-height: 120px; }
-        }
-        .edit-mode .day-card:active { background-color: #eef2ff; }
-        .task-item { 
-            font-size: 0.6rem; 
-            line-height: 1;
-            margin-top: 2px; 
-            padding: 2px; 
-            border-radius: 3px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-        }
-        @media (min-width: 768px) {
-            .task-item { font-size: 0.75rem; padding: 4px; }
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .day-card { min-height: 80px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; background: white; transition: 0.2s; }
+        @media (min-width: 768px) { .day-card { min-height: 120px; } }
+        .task-item-min { font-size: 0.6rem; line-height: 1; margin-top: 2px; padding: 2px; border-radius: 3px; display: flex; justify-content: space-between; align-items: center; }
+        @media (min-width: 768px) { .task-item-min { font-size: 0.7rem; } }
         .completed { text-decoration: line-through; opacity: 0.5; background-color: #f8fafc !important; color: #94a3b8 !important; }
-        .whatsapp-btn { 
-            position: fixed; 
-            bottom: 15px; 
-            right: 15px; 
-            background-color: #25d366; 
-            color: white; 
-            padding: 10px 18px; 
-            border-radius: 30px; 
-            font-weight: bold; 
-            z-index: 1000; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-size: 14px;
-        }
+        .whatsapp-btn { position: fixed; bottom: 20px; right: 20px; background-color: #25d366; color: white; padding: 12px 20px; border-radius: 50px; font-weight: bold; z-index: 1000; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
     </style>
 </head>
-<body class="bg-slate-50 pb-20">
+<body class="bg-slate-50 pb-24">
 
     <div class="w-full max-w-6xl mx-auto p-2 md:p-6">
         
@@ -64,25 +23,24 @@
             <div class="flex justify-between items-start">
                 <div>
                     <h2 class="font-bold text-indigo-900 text-sm md:text-lg uppercase">Casa Áurea Studio</h2>
-                    <p class="text-[10px] md:text-xs text-slate-500 italic">Gestión TNT - Tatiz Tsunede</p>
+                    <p class="text-[10px] md:text-xs text-slate-500 italic">Cronograma TNT - Tatiz Tsunede</p>
                 </div>
                 <div class="bg-indigo-50 px-3 py-1 rounded-lg text-center border border-indigo-100">
-                    <span id="progresoText" class="text-lg md:text-2xl font-black text-indigo-600 block">0 / 0</span>
-                    <span class="text-[8px] md:text-[10px] text-indigo-400 uppercase font-bold tracking-tighter">Completado</span>
+                    <span id="progresoText" class="text-xl md:text-2xl font-black text-indigo-600 block">0 / 0</span>
+                    <span class="text-[8px] md:text-[10px] text-indigo-400 uppercase font-bold">Completado</span>
                 </div>
             </div>
-            <button onclick="window.checkAdminPassword()" id="editBtn" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold active:scale-95 transition-transform">
+            <button onclick="window.checkAdminPassword()" id="editBtn" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold active:scale-95 transition">
                 🔧 Activar Modo Editor
             </button>
         </div>
 
-        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200">
-            <div class="flex bg-slate-50 border-b border-slate-200">
-                <button onclick="window.showMonth(2)" class="flex-1 py-3 text-xs md:text-sm font-bold border-b-4 border-transparent" id="btn-2">MARZO</button>
-                <button onclick="window.showMonth(3)" class="flex-1 py-3 text-xs md:text-sm font-bold border-b-4 border-transparent" id="btn-3">ABRIL</button>
-                <button onclick="window.showMonth(4)" class="flex-1 py-3 text-xs md:text-sm font-bold border-b-4 border-transparent" id="btn-4">MAYO</button>
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200 mb-6">
+            <div class="flex bg-slate-50 border-b border-slate-200 text-[10px] md:text-sm font-bold">
+                <button onclick="window.showMonth(2)" class="flex-1 py-3 border-b-4 border-transparent" id="btn-2">MARZO</button>
+                <button onclick="window.showMonth(3)" class="flex-1 py-3 border-b-4 border-transparent" id="btn-3">ABRIL</button>
+                <button onclick="window.showMonth(4)" class="flex-1 py-3 border-b-4 border-transparent" id="btn-4">MAYO</button>
             </div>
-
             <div class="p-1 md:p-4">
                 <div class="calendar-grid text-center font-bold text-slate-400 text-[9px] md:text-[10px] uppercase mb-1">
                     <div>D</div><div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div>
@@ -90,17 +48,27 @@
                 <div id="calendarContainer" class="calendar-grid"></div>
             </div>
         </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+            <div class="bg-indigo-900 p-4">
+                <h3 class="text-white font-bold text-sm uppercase flex items-center gap-2">
+                    📋 Resumen de Actividades
+                </h3>
+            </div>
+            <div id="taskListDetailed" class="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
+                <p class="p-8 text-center text-slate-400 text-sm">No hay tareas programadas aún.</p>
+            </div>
+        </div>
     </div>
 
-    <a href="#" id="whatsappLink" target="_blank" class="whatsapp-btn">
-        <span>Confirmar</span>
+    <a href="#" id="whatsappLink" target="_blank" class="whatsapp-btn text-sm">
+        Confirmar Avance
     </a>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-        // CONFIGURACIÓN DE TU PROYECTO
         const firebaseConfig = {
             apiKey: "AIzaSyBBkE788lWfe9EGv0AEHJtGPYlEOpb8VLI",
             authDomain: "casa-aurea-cronograma.firebaseapp.com",
@@ -121,6 +89,7 @@
         onValue(ref(db, 'tasks'), (snapshot) => {
             tasksData = snapshot.val() || {};
             renderCalendar(currentMonth);
+            renderDetailedList();
             updateStats();
         });
 
@@ -137,8 +106,7 @@
                 b.classList.remove('border-indigo-500', 'text-indigo-600', 'bg-white');
                 b.classList.add('text-slate-400');
             });
-            const activeBtn = document.getElementById(`btn-${month}`);
-            activeBtn.classList.add('border-indigo-500', 'text-indigo-600', 'bg-white');
+            document.getElementById(`btn-${month}`).classList.add('border-indigo-500', 'text-indigo-600', 'bg-white');
 
             for (let i = 0; i < firstDay; i++) {
                 container.innerHTML += `<div class="day-card bg-slate-50/30 border-none"></div>`;
@@ -151,10 +119,9 @@
                 let htmlTasks = "";
                 Object.entries(dayTasks).forEach(([id, t]) => {
                     htmlTasks += `
-                        <div class="task-item ${t.done ? 'completed' : 'bg-indigo-50 text-indigo-700 border border-indigo-100'}" 
+                        <div class="task-item-min ${t.done ? 'completed' : 'bg-indigo-50 text-indigo-700 border border-indigo-100'}" 
                              onclick="event.stopPropagation(); window.toggleTask('${dateKey}', '${id}', ${t.done})">
                             <span class="truncate flex-1">${t.text}</span>
-                            ${window.editMode ? `<span onclick="event.stopPropagation(); window.deleteTask('${dateKey}', '${id}')" class="text-red-500 font-bold ml-1 text-xs">×</span>` : ''}
                         </div>
                     `;
                 });
@@ -162,7 +129,7 @@
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'day-card p-1 md:p-2';
                 dayDiv.innerHTML = `
-                    <span class="text-[10px] md:text-xs font-bold ${Object.keys(dayTasks).length > 0 ? 'text-indigo-600' : 'text-slate-400'}">${day}</span>
+                    <span class="text-[9px] md:text-xs font-bold ${Object.keys(dayTasks).length > 0 ? 'text-indigo-600' : 'text-slate-400'}">${day}</span>
                     <div class="flex-1 overflow-hidden">${htmlTasks}</div>
                 `;
                 dayDiv.onclick = () => { if(window.editMode) window.addTask(dateKey); };
@@ -170,8 +137,49 @@
             }
         }
 
+        function renderDetailedList() {
+            const listContainer = document.getElementById('taskListDetailed');
+            listContainer.innerHTML = '';
+
+            // Aplanamos y ordenamos las tareas por fecha
+            let allTasks = [];
+            Object.entries(tasksData).forEach(([date, items]) => {
+                Object.entries(items).forEach(([id, t]) => {
+                    allTasks.push({ date, id, ...t });
+                });
+            });
+
+            allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (allTasks.length === 0) {
+                listContainer.innerHTML = '<p class="p-8 text-center text-slate-400 text-sm">No hay tareas programadas aún.</p>';
+                return;
+            }
+
+            allTasks.forEach(t => {
+                const [y, m, d] = t.date.split('-');
+                const fechaLegible = `${d}/${m}/${y}`;
+                
+                const item = document.createElement('div');
+                item.className = `p-4 flex items-center justify-between gap-3 ${t.done ? 'bg-slate-50' : 'bg-white'}`;
+                item.innerHTML = `
+                    <div class="flex flex-col flex-1">
+                        <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-tighter">${fechaLegible}</span>
+                        <span class="text-sm font-medium ${t.done ? 'line-through text-slate-400' : 'text-slate-700'}">${t.text}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" ${t.done ? 'checked' : ''} 
+                               onchange="window.toggleTask('${t.date}', '${t.id}', ${t.done})"
+                               class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        ${window.editMode ? `<button onclick="window.deleteTask('${t.date}', '${t.id}')" class="text-red-500 font-bold px-2 text-xl">×</button>` : ''}
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
         window.addTask = (dateKey) => {
-            const text = prompt("Nueva tarea para el día " + dateKey + ":");
+            const text = prompt("Nueva tarea:");
             if (text) push(ref(db, `tasks/${dateKey}`), { text, done: false });
         };
 
@@ -194,7 +202,7 @@
                 const pass = prompt("Contraseña Casa Áurea:");
                 if (pass === "aurea2026") {
                     window.editMode = true;
-                    document.getElementById('editBtn').innerText = "Cerrar Editor";
+                    document.getElementById('editBtn').innerText = "Cerrar Modo Editor";
                     document.getElementById('editBtn').classList.replace('bg-slate-800', 'bg-red-500');
                 } else { alert("Incorrecta."); }
             } else {
@@ -203,6 +211,7 @@
                 document.getElementById('editBtn').classList.replace('bg-red-500', 'bg-slate-800');
             }
             renderCalendar(currentMonth);
+            renderDetailedList();
         };
 
         function updateStats() {
@@ -214,8 +223,8 @@
                 });
             });
             document.getElementById('progresoText').innerText = `${done} / ${total}`;
-            const msg = encodeURIComponent(`Hola Casa Áurea, he actualizado el avance. Llevamos ${done} de ${total} tareas listas.`);
-            document.getElementById('whatsappLink').href = `https://wa.me/+525624539573?text=${msg}`;
+            const msg = encodeURIComponent(`Hola Casa Áurea, el progreso es de ${done} de ${total} tareas completadas.`);
+            document.getElementById('whatsappLink').href = `https://wa.me/5215500000000?text=${msg}`;
         }
     </script>
 </body>
