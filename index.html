@@ -7,67 +7,88 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-        .day-card { min-height: 110px; border: 1px solid #e5e7eb; transition: all 0.2s; }
-        .day-card:hover { background-color: #f9fafb; border-color: #6366f1; }
-        .completed { text-decoration: line-through; color: #9ca3af !important; background-color: #f3f4f6 !important; }
-        .task-item { font-size: 0.7rem; margin-top: 2px; padding: 2px 4px; border-radius: 4px; cursor: pointer; }
-        /* Estilo para el botón flotante */
-        .whatsapp-btn { position: fixed; bottom: 20px; right: 20px; background-color: #25d366; color: white; padding: 12px 20px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.3s; z-index: 1000; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-        .whatsapp-btn:hover { transform: scale(1.05); background-color: #128c7e; }
+        .day-card { min-height: 120px; border: 1px solid #e2e8f0; transition: 0.2s; position: relative; }
+        .edit-mode .day-card:hover { border-color: #6366f1; background-color: #f8fafc; cursor: pointer; }
+        .task-item { font-size: 0.75rem; margin-top: 4px; padding: 4px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .completed { text-decoration: line-through; opacity: 0.5; background-color: #f1f5f9 !important; color: #94a3b8 !important; }
+        .whatsapp-btn { position: fixed; bottom: 20px; right: 20px; background-color: #25d366; color: white; padding: 12px 24px; border-radius: 50px; font-weight: bold; z-index: 1000; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
     </style>
 </head>
-<body class="bg-slate-100 p-4 md:p-8 pb-24">
+<body class="bg-slate-50 p-4 pb-24">
 
-    <div class="max-w-6xl mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden">
-        <div class="bg-indigo-900 p-6 text-white flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white border-2 border-indigo-500 rounded-xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 shadow-sm">
             <div>
-                <h1 class="text-2xl font-bold">Casa Áurea Studio: Cronograma TNT</h1>
-                <p class="text-indigo-200">Seguimiento de Actividades - Cliente: Tatiz Tsunede</p>
+                <h2 class="font-bold text-indigo-900 uppercase flex items-center gap-2">
+                    <span>🛠️ Panel Casa Áurea</span>
+                    <span id="statusBadge" class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Sincronizado</span>
+                </h2>
+                <p class="text-xs text-gray-500">Gestión de cronograma para la TNT.</p>
             </div>
-            <div class="bg-indigo-800 p-4 rounded-lg text-center min-w-[150px]">
-                <span class="text-xs uppercase tracking-widest opacity-70">Progreso Total</span>
-                <div class="flex items-center justify-center gap-2">
-                    <span id="globalCounter" class="text-3xl font-bold text-green-400">0</span>
-                    <span class="text-xl opacity-50">/</span>
-                    <span id="totalTasks" class="text-xl opacity-50">0</span>
+            <button onclick="checkAdminPassword()" id="editBtn" class="bg-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-indigo-700 transition">
+                Activar Modo Editor
+            </button>
+        </div>
+
+        <div class="bg-white shadow-2xl rounded-2xl overflow-hidden border">
+            <div class="bg-slate-900 p-6 text-white flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold">Tatiz Tsunede</h1>
+                    <p class="text-slate-400 text-sm">Cronograma de Trabajo 2026</p>
+                </div>
+                <div class="bg-slate-800 p-3 rounded-xl text-center border border-slate-700 min-w-[120px]">
+                    <span id="progresoText" class="text-2xl font-black text-green-400">0 / 0</span>
+                    <span class="block text-[10px] text-slate-400 uppercase tracking-widest">Tareas Listas</span>
                 </div>
             </div>
-        </div>
 
-        <div class="flex bg-indigo-50 border-b border-indigo-100">
-            <button onclick="showMonth(2)" class="flex-1 py-4 font-bold transition" id="btn-2">MARZO</button>
-            <button onclick="showMonth(3)" class="flex-1 py-4 font-bold transition" id="btn-3">ABRIL</button>
-            <button onclick="showMonth(4)" class="flex-1 py-4 font-bold transition" id="btn-4">MAYO</button>
-        </div>
-
-        <div class="p-6">
-            <div class="calendar-grid text-center font-bold text-indigo-400 text-xs uppercase mb-4 tracking-tighter">
-                <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+            <div class="flex bg-slate-100 border-b">
+                <button onclick="showMonth(2)" class="flex-1 py-4 font-bold border-b-4 border-transparent" id="btn-2">MARZO</button>
+                <button onclick="showMonth(3)" class="flex-1 py-4 font-bold border-b-4 border-transparent" id="btn-3">ABRIL</button>
+                <button onclick="showMonth(4)" class="flex-1 py-4 font-bold border-b-4 border-transparent" id="btn-4">MAYO</button>
             </div>
-            <div id="calendarContainer" class="calendar-grid gap-1"></div>
+
+            <div class="p-4 overflow-x-auto">
+                <div class="calendar-grid text-center font-bold text-slate-400 text-[10px] uppercase mb-2">
+                    <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+                </div>
+                <div id="calendarContainer" class="calendar-grid gap-1"></div>
+            </div>
         </div>
     </div>
 
     <a href="#" id="whatsappLink" target="_blank" class="whatsapp-btn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.481 5.229 3.481 8.406c0 6.556-5.333 11.888-11.889 11.888-2.013 0-3.987-.512-5.736-1.486l-6.247 1.709zm6.294-4.143c1.554.921 3.14 1.403 4.843 1.403 5.4 0 9.795-4.394 9.795-9.794 0-5.399-4.394-9.794-9.795-9.794-2.618 0-5.078 1.02-6.928 2.87-1.85 1.849-2.869 4.308-2.869 6.924 0 1.764.512 3.441 1.48 4.965l-1.01 3.692 3.789-.967z"/></svg>
-        Confirmar Revisión
+        Confirmar Revisión con Agencia
     </a>
 
-    <script>
-        // CONFIGURACIÓN: Pon aquí tu número de teléfono (con código de país, sin el +)
-        const TU_TELEFONO = "+52 5624539573"; // Ejemplo México: 521 + número
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const MASTER_TASKS = {
-            "2026-3-10": [{ text: "Sesión de fotos: Personaje Alley", done: false }],
-            "2026-3-20": [{ text: "Revisión de redes sociales (150k)", done: false }],
-            "2026-4-5":  [{ text: "Pruebas de vestuario TNT", done: false }],
-            "2026-4-15": [{ text: "Lanzamiento Promo Video", done: false }],
-            "2026-5-10": [{ text: "Logística de viaje y hotel", done: false }],
-            "2026-5-25": [{ text: "Entrega de kit de prensa", done: false }]
+        // CONFIGURACIÓN DE TU PROYECTO
+        const firebaseConfig = {
+            apiKey: "AIzaSyBBkE788lWfe9EGv0AEHJtGPYlEOpb8VLI",
+            authDomain: "casa-aurea-cronograma.firebaseapp.com",
+            databaseURL: "https://casa-aurea-cronograma-default-rtdb.firebaseio.com",
+            projectId: "casa-aurea-cronograma",
+            storageBucket: "casa-aurea-cronograma.firebasestorage.app",
+            messagingSenderId: "454700891340",
+            appId: "1:454700891340:web:85309039ab9455488f1669"
         };
 
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        window.editMode = false;
         let currentMonth = 2;
-        let userProgress = JSON.parse(localStorage.getItem('tnt_progress')) || {};
+        let tasks = {};
+
+        // Sincronización en tiempo real
+        onValue(ref(db, 'tasks'), (snapshot) => {
+            tasks = snapshot.val() || {};
+            renderCalendar(currentMonth);
+            updateStats();
+        });
 
         function renderCalendar(month) {
             const container = document.getElementById('calendarContainer');
@@ -76,71 +97,88 @@
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            document.querySelectorAll('button[id^="btn-"]').forEach(b => {
-                b.classList.remove('bg-white', 'text-indigo-600', 'shadow-inner');
-                b.classList.add('text-indigo-400');
-            });
-            document.getElementById(`btn-${month}`).classList.add('bg-white', 'text-indigo-600', 'shadow-inner');
+            // UI Meses
+            document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('border-indigo-500', 'text-indigo-600', 'bg-white'));
+            document.getElementById(`btn-${month}`).classList.add('border-indigo-500', 'text-indigo-600', 'bg-white');
 
-            for (let i = 0; i < firstDay; i++) {
-                container.innerHTML += `<div class="day-card bg-gray-50/50 border-none"></div>`;
-            }
+            for (let i = 0; i < firstDay; i++) container.innerHTML += `<div class="day-card bg-slate-50/20"></div>`;
 
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateKey = `${year}-${month + 1}-${day}`;
-                const dayTasks = MASTER_TASKS[dateKey] || [];
+                const dayTasks = tasks[dateKey] || [];
                 
-                let tasksHtml = dayTasks.map((t, idx) => {
-                    const isDone = userProgress[dateKey + '-' + idx] || false;
-                    return `
-                        <div onclick="toggleTask('${dateKey}', ${idx})" 
-                             class="task-item ${isDone ? 'completed bg-gray-100 text-gray-400' : 'bg-indigo-100 text-indigo-700 font-medium border border-indigo-200'}">
-                            ${t.text}
+                let htmlTasks = "";
+                Object.entries(dayTasks).forEach(([id, t]) => {
+                    htmlTasks += `
+                        <div class="task-item ${t.done ? 'completed' : 'bg-indigo-50 text-indigo-700 border border-indigo-100'}">
+                            <span onclick="window.toggleTask('${dateKey}', '${id}', ${t.done})" class="cursor-pointer truncate">${t.text}</span>
+                            ${window.editMode ? `<button onclick="window.deleteTask('${dateKey}', '${id}')" class="text-red-500 ml-1 font-bold">×</button>` : ''}
                         </div>
                     `;
-                }).join('');
-
-                container.innerHTML += `
-                    <div class="day-card p-2 flex flex-col">
-                        <span class="text-sm font-bold ${dayTasks.length > 0 ? 'text-indigo-600' : 'text-gray-400'}">${day}</span>
-                        <div class="mt-1">${tasksHtml}</div>
-                    </div>
-                `;
-            }
-            calculateStats();
-        }
-
-        function toggleTask(dateKey, idx) {
-            const key = dateKey + '-' + idx;
-            userProgress[key] = !userProgress[key];
-            localStorage.setItem('tnt_progress', JSON.stringify(userProgress));
-            renderCalendar(currentMonth);
-        }
-
-        function calculateStats() {
-            let total = 0;
-            let finished = 0;
-            Object.keys(MASTER_TASKS).forEach(date => {
-                MASTER_TASKS[date].forEach((task, idx) => {
-                    total++;
-                    if (userProgress[date + '-' + idx]) finished++;
                 });
-            });
 
-            document.getElementById('globalCounter').innerText = finished;
-            document.getElementById('totalTasks').innerText = total;
-
-            // Actualizar el link de WhatsApp
-            const msg = `Hola Casa Áurea, soy Tatiz. He revisado el cronograma para la TNT. Llevamos un progreso de ${finished} de ${total} tareas completadas.`;
-            document.getElementById('whatsappLink').href = `https://wa.me/${TU_TELEFONO}?text=${encodeURIComponent(msg)}`;
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'day-card p-2';
+                dayDiv.innerHTML = `
+                    <span class="text-xs font-bold ${Object.keys(dayTasks).length > 0 ? 'text-indigo-600' : 'text-slate-400'}">${day}</span>
+                    <div class="mt-1">${htmlTasks}</div>
+                `;
+                dayDiv.onclick = () => { if(window.editMode) window.addTask(dateKey); };
+                container.appendChild(dayDiv);
+            }
         }
 
-        function showMonth(m) {
+        // Funciones Globales para que funcionen con onclick
+        window.addTask = (dateKey) => {
+            const text = prompt("Nueva tarea para el día " + dateKey + ":");
+            if (text) push(ref(db, 'tasks/' + dateKey), { text, done: false });
+        };
+
+        window.toggleTask = (dateKey, taskId, currentStatus) => {
+            if (window.editMode) return;
+            update(ref(db, `tasks/${dateKey}/${taskId}`), { done: !currentStatus });
+        };
+
+        window.deleteTask = (dateKey, taskId) => {
+            if (confirm("¿Eliminar esta tarea?")) remove(ref(db, `tasks/${dateKey}/${taskId}`));
+        };
+
+        window.showMonth = (m) => {
             currentMonth = m;
             renderCalendar(m);
-        }
+        };
 
-        renderCalendar(2);
+        window.checkAdminPassword = () => {
+            if (!window.editMode) {
+                const pass = prompt("Introduce la contraseña de Casa Áurea:");
+                if (pass === "aurea2026") { // <--- CAMBIA TU CONTRASEÑA AQUÍ
+                    window.editMode = true;
+                    document.getElementById('editBtn').innerText = "Cerrar Modo Editor";
+                    document.getElementById('editBtn').classList.replace('bg-indigo-600', 'bg-red-500');
+                    renderCalendar(currentMonth);
+                } else {
+                    alert("Contraseña incorrecta.");
+                }
+            } else {
+                window.editMode = false;
+                document.getElementById('editBtn').innerText = "Activar Modo Editor";
+                document.getElementById('editBtn').classList.replace('bg-red-500', 'bg-indigo-600');
+                renderCalendar(currentMonth);
+            }
+        };
+
+        function updateStats() {
+            let total = 0, done = 0;
+            Object.values(tasks).forEach(day => {
+                Object.values(day).forEach(t => {
+                    total++;
+                    if (t.done) done++;
+                });
+            });
+            document.getElementById('progresoText').innerText = `${done} / ${total}`;
+            const msg = encodeURIComponent(`Hola Casa Áurea, soy Tatiz. He actualizado el progreso: ${done} de ${total} tareas listas.`);
+            document.getElementById('whatsappLink').href = `https://wa.me/5215500000000?text=${msg}`;
+        }
     </script>
 </body>
 </html>
