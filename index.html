@@ -3,15 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cronograma Casa Áurea - Tatiz Tsunede</title>
+    <title>Cronograma Casa Áurea - Gestión de Rangos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-        .day-card { min-height: 80px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; background: white; transition: 0.2s; }
-        @media (min-width: 768px) { .day-card { min-height: 120px; } }
-        .task-item-min { font-size: 0.6rem; line-height: 1.1; margin-top: 2px; padding: 2px; border-radius: 3px; display: flex; justify-content: space-between; align-items: center; }
-        @media (min-width: 768px) { .task-item-min { font-size: 0.7rem; } }
-        .completed { text-decoration: line-through; opacity: 0.5; background-color: #f8fafc !important; color: #94a3b8 !important; }
+        .day-card { min-height: 85px; border: 1px solid #f1f5f9; display: flex; flex-direction: column; background: white; }
+        @media (min-width: 768px) { .day-card { min-height: 125px; } }
+        
+        /* Estilo para tareas que abarcan días */
+        .task-bar { 
+            font-size: 0.6rem; 
+            padding: 2px 4px; 
+            margin-top: 2px; 
+            border-radius: 4px; 
+            background-color: #e0e7ff; 
+            color: #4338ca; 
+            border-left: 3px solid #6366f1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .task-bar.is-done { 
+            background-color: #f1f5f9; 
+            color: #94a3b8; 
+            border-left-color: #cbd5e1; 
+            text-decoration: line-through; 
+        }
+
         .whatsapp-btn { position: fixed; bottom: 20px; right: 20px; background-color: #25d366; color: white; padding: 12px 20px; border-radius: 50px; font-weight: bold; z-index: 1000; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
     </style>
 </head>
@@ -20,18 +38,15 @@
     <div class="w-full max-w-6xl mx-auto p-2 md:p-6">
         
         <div class="bg-white rounded-xl p-4 mb-4 shadow-sm border border-slate-200 flex flex-col gap-3">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h2 class="font-bold text-indigo-900 text-sm md:text-lg uppercase italic tracking-tighter">Casa Áurea Studio</h2>
-                    <p class="text-[10px] md:text-xs text-slate-500 italic">Planificación TNT: Tatiz Tsunede</p>
-                </div>
-                <div class="bg-indigo-50 px-3 py-1 rounded-lg text-center border border-indigo-100">
-                    <span id="progresoText" class="text-xl md:text-2xl font-black text-indigo-600 block">0 / 0</span>
-                    <span class="text-[8px] md:text-[10px] text-indigo-400 uppercase font-bold">Completado</span>
+            <div class="flex justify-between items-center">
+                <h2 class="font-bold text-indigo-900 text-sm md:text-lg uppercase">Casa Áurea Studio</h2>
+                <div class="text-right">
+                    <span id="progresoText" class="text-lg md:text-2xl font-black text-indigo-600">0 / 0</span>
+                    <p class="text-[8px] uppercase font-bold text-slate-400">Tareas Listas</p>
                 </div>
             </div>
-            <button onclick="window.checkAdminPassword()" id="editBtn" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold active:scale-95 transition shadow-lg">
-                🔧 Panel de Administración
+            <button onclick="window.checkAdminPassword()" id="editBtn" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold transition">
+                🔧 Modo Administrador
             </button>
         </div>
 
@@ -50,20 +65,16 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-            <div class="bg-slate-900 p-4 flex justify-between items-center">
-                <h3 class="text-white font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                    📋 Detalle de Actividades
-                </h3>
+            <div class="bg-slate-900 p-4">
+                <h3 class="text-white font-bold text-xs uppercase tracking-widest">📋 Cronograma Detallado</h3>
             </div>
-            <div id="taskListDetailed" class="divide-y divide-slate-100">
-                <p class="p-8 text-center text-slate-400 text-sm">Cargando cronograma...</p>
+            <div id="taskListDetailed" class="divide-y divide-slate-100 italic text-sm text-slate-500 p-4 text-center">
+                Cargando tareas...
             </div>
         </div>
     </div>
 
-    <a href="#" id="whatsappLink" target="_blank" class="whatsapp-btn text-sm">
-        Confirmar Revisión
-    </a>
+    <a href="#" id="whatsappLink" target="_blank" class="whatsapp-btn text-sm">WhatsApp</a>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -83,10 +94,10 @@
         const db = getDatabase(app);
         
         window.editMode = false;
-        let currentMonth = 2;
+        let currentMonth = 2; // Marzo
         let tasksData = {};
 
-        onValue(ref(db, 'tasks'), (snapshot) => {
+        onValue(ref(db, 'globalTasks'), (snapshot) => {
             tasksData = snapshot.val() || {};
             renderCalendar(currentMonth);
             renderDetailedList();
@@ -95,144 +106,118 @@
 
         function renderCalendar(month) {
             const container = document.getElementById('calendarContainer');
-            if (!container) return;
             container.innerHTML = '';
-            
             const year = 2026;
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            document.querySelectorAll('button[id^="btn-"]').forEach(b => {
-                b.classList.remove('border-indigo-500', 'text-indigo-600', 'bg-white');
-                b.classList.add('text-slate-400');
-            });
+            // Actualizar botones meses
+            document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('border-indigo-500', 'text-indigo-600', 'bg-white'));
             document.getElementById(`btn-${month}`).classList.add('border-indigo-500', 'text-indigo-600', 'bg-white');
 
-            for (let i = 0; i < firstDay; i++) {
-                container.innerHTML += `<div class="day-card bg-slate-50/30 border-none"></div>`;
-            }
+            for (let i = 0; i < firstDay; i++) container.innerHTML += `<div class="day-card bg-slate-50/30"></div>`;
 
             for (let day = 1; day <= daysInMonth; day++) {
-                const dateKey = `${year}-${month + 1}-${day}`;
-                const dayTasks = tasksData[dateKey] || {};
-                
-                let htmlTasks = "";
-                Object.entries(dayTasks).forEach(([id, t]) => {
-                    htmlTasks += `
-                        <div class="task-item-min ${t.done ? 'completed' : 'bg-indigo-50 text-indigo-700 border border-indigo-100'}" 
-                             onclick="event.stopPropagation(); window.toggleTask('${dateKey}', '${id}', ${t.done})">
-                            <span class="truncate flex-1 font-medium">${t.text}</span>
-                        </div>
-                    `;
-                });
-
+                const currentDate = new Date(year, month, day);
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'day-card p-1 md:p-2 cursor-pointer';
-                dayDiv.innerHTML = `
-                    <span class="text-[9px] md:text-xs font-bold ${Object.keys(dayTasks).length > 0 ? 'text-indigo-600' : 'text-slate-400'}">${day}</span>
-                    <div class="flex-1 overflow-hidden">${htmlTasks}</div>
-                `;
-                dayDiv.onclick = () => { if(window.editMode) window.addTask(dateKey); };
+                
+                let dayTasksHtml = "";
+                Object.entries(tasksData).forEach(([id, t]) => {
+                    const start = new Date(t.startDate + "T00:00:00");
+                    const end = new Date(t.endDate + "T00:00:00");
+                    
+                    if (currentDate >= start && currentDate <= end) {
+                        dayTasksHtml += `<div class="task-bar ${t.done ? 'is-done' : ''}" onclick="event.stopPropagation(); window.toggleTask('${id}', ${t.done})">${t.text}</div>`;
+                    }
+                });
+
+                dayDiv.innerHTML = `<span class="text-[9px] md:text-xs font-bold text-slate-400">${day}</span><div class="flex-1">${dayTasksHtml}</div>`;
+                dayDiv.onclick = () => { if(window.editMode) window.addTask(month, day); };
                 container.appendChild(dayDiv);
             }
         }
 
-        function renderDetailedList() {
-            const listContainer = document.getElementById('taskListDetailed');
-            listContainer.innerHTML = '';
-
-            let allTasks = [];
-            Object.entries(tasksData).forEach(([date, items]) => {
-                Object.entries(items).forEach(([id, t]) => {
-                    allTasks.push({ date, id, ...t });
-                });
-            });
-
-            allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-            if (allTasks.length === 0) {
-                listContainer.innerHTML = '<p class="p-8 text-center text-slate-400 text-sm">No hay tareas programadas aún.</p>';
+        window.addTask = (month, startDay) => {
+            const title = prompt("Título de la actividad:");
+            if (!title) return;
+            const desc = prompt("Descripción:");
+            const endDay = prompt("¿Hasta qué día termina? (Número del 1 al 31):", startDay);
+            
+            if (parseInt(endDay) < startDay) {
+                alert("El día de fin no puede ser menor al de inicio.");
                 return;
             }
 
-            allTasks.forEach(t => {
-                const [y, m, d] = t.date.split('-');
-                const fechaLegible = `${d}/${m}/${y}`;
-                
+            const monthStr = (month + 1).toString().padStart(2, '0');
+            const startDate = `2026-${monthStr}-${startDay.toString().padStart(2, '0')}`;
+            const endDate = `2026-${monthStr}-${endDay.toString().padStart(2, '0')}`;
+
+            push(ref(db, 'globalTasks'), {
+                text: title,
+                description: desc,
+                startDate: startDate,
+                endDate: endDate,
+                done: false
+            });
+        };
+
+        window.renderDetailedList = () => {
+            const list = document.getElementById('taskListDetailed');
+            list.innerHTML = '';
+            
+            const sorted = Object.entries(tasksData).sort((a,b) => new Date(a[1].startDate) - new Date(b[1].startDate));
+
+            if (sorted.length === 0) {
+                list.innerHTML = '<p class="p-8 text-slate-400 text-sm">No hay tareas programadas.</p>';
+                return;
+            }
+
+            sorted.forEach(([id, t]) => {
                 const item = document.createElement('div');
                 item.className = `p-4 flex items-start justify-between gap-3 ${t.done ? 'bg-slate-50' : 'bg-white'}`;
                 item.innerHTML = `
-                    <div class="flex flex-col flex-1">
-                        <span class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-1">${fechaLegible}</span>
-                        <span class="text-sm font-bold ${t.done ? 'line-through text-slate-400' : 'text-slate-800'}">${t.text}</span>
-                        ${t.description ? `<p class="text-xs text-slate-500 mt-1 leading-relaxed">${t.description}</p>` : ''}
+                    <div class="flex-1">
+                        <span class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">Rango: ${t.startDate} al ${t.endDate}</span>
+                        <h4 class="text-sm font-bold ${t.done ? 'line-through text-slate-400' : 'text-slate-800'}">${t.text}</h4>
+                        <p class="text-xs text-slate-500 mt-1">${t.description || ''}</p>
                     </div>
-                    <div class="flex items-center gap-2 pt-1">
-                        <input type="checkbox" ${t.done ? 'checked' : ''} 
-                               onchange="window.toggleTask('${t.date}', '${t.id}', ${t.done})"
-                               class="w-6 h-6 rounded-lg border-slate-300 text-indigo-600 focus:ring-indigo-500 transition cursor-pointer">
-                        ${window.editMode ? `<button onclick="window.deleteTask('${t.date}', '${t.id}')" class="text-red-400 font-bold px-2 text-xl hover:text-red-600 transition">×</button>` : ''}
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="window.toggleTask('${id}', ${t.done})" class="w-6 h-6 rounded border-slate-300 text-indigo-600">
+                        ${window.editMode ? `<button onclick="window.deleteTask('${id}')" class="text-red-400 font-bold px-2 text-xl">×</button>` : ''}
                     </div>
                 `;
-                listContainer.appendChild(item);
-            });
-        }
-
-        window.addTask = (dateKey) => {
-            const title = prompt("Título de la tarea:");
-            if (!title) return;
-            const description = prompt("Descripción detallada (opcional):") || "";
-            
-            push(ref(db, `tasks/${dateKey}`), { 
-                text: title, 
-                description: description, 
-                done: false 
+                list.appendChild(item);
             });
         };
 
-        window.toggleTask = (dateKey, taskId, currentStatus) => {
+        window.toggleTask = (taskId, currentStatus) => {
             if (window.editMode) return;
-            update(ref(db, `tasks/${dateKey}/${taskId}`), { done: !currentStatus });
+            update(ref(db, `globalTasks/${taskId}`), { done: !currentStatus });
         };
 
-        window.deleteTask = (dateKey, taskId) => {
-            if (confirm("¿Eliminar definitivamente esta actividad?")) {
-                remove(ref(db, `tasks/${dateKey}/${taskId}`));
-            }
+        window.deleteTask = (taskId) => {
+            if (confirm("¿Eliminar actividad?")) remove(ref(db, `globalTasks/${taskId}`));
         };
 
-        window.showMonth = (m) => {
-            currentMonth = m;
-            renderCalendar(m);
-        };
+        window.showMonth = (m) => { currentMonth = m; renderCalendar(m); };
 
         window.checkAdminPassword = () => {
-            if (!window.editMode) {
-                const pass = prompt("Acceso Administrador Casa Áurea:");
-                if (pass === "aurea2026") {
-                    window.editMode = true;
-                    document.getElementById('editBtn').innerText = "Cerrar Modo Editor";
-                    document.getElementById('editBtn').classList.replace('bg-slate-800', 'bg-red-500');
-                } else { alert("Contraseña incorrecta."); }
-            } else {
-                window.editMode = false;
-                document.getElementById('editBtn').innerText = "🔧 Panel de Administración";
-                document.getElementById('editBtn').classList.replace('bg-red-500', 'bg-slate-800');
-            }
-            renderCalendar(currentMonth);
-            renderDetailedList();
+            const pass = prompt("Contraseña:");
+            if (pass === "aurea2026") {
+                window.editMode = !window.editMode;
+                document.getElementById('editBtn').innerText = window.editMode ? "Cerrar Administrador" : "Modo Administrador";
+                document.getElementById('editBtn').classList.toggle('bg-red-500');
+                renderCalendar(currentMonth);
+                renderDetailedList();
+            } else { alert("Incorrecta"); }
         };
 
         function updateStats() {
-            let total = 0, done = 0;
-            Object.values(tasksData).forEach(day => {
-                Object.values(day).forEach(t => {
-                    total++;
-                    if (t.done) done++;
-                });
-            });
+            let total = Object.keys(tasksData).length;
+            let done = Object.values(tasksData).filter(t => t.done).length;
             document.getElementById('progresoText').innerText = `${done} / ${total}`;
-            const msg = encodeURIComponent(`Hola Casa Áurea, he revisado el cronograma actualizado. Llevamos ${done} tareas listas.`);
+            const msg = encodeURIComponent(`Hola, progreso actual: ${done}/${total} tareas.`);
             document.getElementById('whatsappLink').href = `https://wa.me/5215500000000?text=${msg}`;
         }
     </script>
